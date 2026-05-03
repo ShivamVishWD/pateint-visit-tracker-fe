@@ -37,13 +37,23 @@ export const useAppStore = create<AppStore>((set) => ({
   // Auth system
   isAuthenticated: !!localStorage.getItem('token'),
   token: localStorage.getItem('token'),
-  user: null, // We could store user in localStorage too if needed
+  user: (() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      console.error('Failed to parse user from localStorage', e);
+      return null;
+    }
+  })(),
   login: (token, user) => {
     localStorage.setItem('token', token);
-    set({ isAuthenticated: true, token, user, activePage: 'visits' });
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+    set({ isAuthenticated: true, token, user: user || null, activePage: 'visits' });
   },
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     set({ isAuthenticated: false, token: null, user: null, activePage: 'login' });
   },
 
